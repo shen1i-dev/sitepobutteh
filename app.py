@@ -2,11 +2,11 @@ from flask import Flask, render_template_string, url_for, request, redirect, jso
 from markupsafe import Markup
 import models
 
-# Untitled-1.py
-# Простий Flask вебзастосунок з адаптивними статичними сторінками (Головна, Про нас, Послуги, Контакти)
-# Запуск: python Untitled-1.py
+# Імпортуємо адмін-блюпринт з папки routes
+from routes.admin import admin_bp
 
 app = Flask(__name__)
+app.register_blueprint(admin_bp, url_prefix="/admin")
 
 # Базовий шаблон з Tailwind CDN та простим адаптивним меню
 base_template = """
@@ -171,11 +171,6 @@ def services_order():
         return jsonify({"order_id": order_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-# додати імпорти для моделей і реєстрації адмін-blueprint
-from routes.admin import admin_bp
-
-app.register_blueprint(admin_bp, url_prefix="/admin")
 
 if __name__ == "__main__":
         # Ініціалізація БД (створить db.sqlite)

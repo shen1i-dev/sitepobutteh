@@ -1,7 +1,7 @@
-from flask import Blueprint, request, redirect, url_for, render_template_string
+from flask import Blueprint, render_template, render_template_string, request, redirect, url_for, flash
 import models
 
-admin_bp = Blueprint("admin", __name__)
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 base_admin = """
 <!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -22,9 +22,9 @@ def admin_index():
     body = """
     <ul class="list-disc pl-5">
         <li><a href="/admin/feedbacks" class="text-blue-600">Відгуки</a></li>
-        <li><a href="/admin/products" class="text-blue-600">Товари</a></li>
-        <li><a href="/admin/orders" class="text-blue-600">Замовлення</a></li>
         <li><a href="/admin/clients" class="text-blue-600">Клієнти</a></li>
+        <li><a href="/admin/services" class="text-blue-600">Послуги</a></li>
+        <li><a href="/admin/service_orders" class="text-blue-600">Замовлення послуг</a></li>
     </ul>
     """
     return render_template_string(base_admin, body=body)
@@ -44,47 +44,6 @@ def feedback_delete(fid):
     models.delete_feedback(fid)
     return redirect(url_for("admin.feedbacks"))
 
-# Products
-@admin_bp.route("/products", methods=["GET","POST"])
-def products():
-    message = ""
-    if request.method == "POST":
-        name = request.form.get("name")
-        desc = request.form.get("description")
-        price = request.form.get("price") or 0
-        stock = request.form.get("stock") or 0
-        models.create_product(name, desc, price, stock)
-        message = "<div class='text-green-600'>Товар додано</div>"
-    rows = models.get_products()
-    body = "<h2 class='text-xl'>Товари</h2>"
-    body += message
-    body += "<form method='post' class='mt-3 mb-4 bg-white p-4 rounded shadow'><input name='name' placeholder='Назва' class='border p-2 w-full mb-2' required><textarea name='description' placeholder='Опис' class='border p-2 w-full mb-2'></textarea><div class='flex gap-2'><input name='price' placeholder='Ціна' class='border p-2' required><input name='stock' placeholder='Кількість' class='border p-2'></div><button class='mt-2 px-3 py-1 bg-blue-600 text-white rounded'>Додати</button></form>"
-    for r in rows:
-        body += f"<div class='p-3 bg-white rounded shadow mb-2'><b>{r[1]}</b> — {r[3]} грн <div class='text-sm text-gray-600'>{r[2]}</div><form method='post' action='/admin/products/delete/{r[0]}' class='mt-2'><button class='px-2 py-1 bg-red-500 text-white rounded'>Видалити</button></form></div>"
-    return render_template_string(base_admin, body=body)
-
-@admin_bp.route("/products/delete/<int:pid>", methods=["POST"])
-def product_delete(pid):
-    models.delete_product(pid)
-    return redirect(url_for("admin.products"))
-
-# Orders
-@admin_bp.route("/orders", methods=["GET","POST"])
-def orders():
-    if request.method == "POST":
-        oid = int(request.form.get("order_id"))
-        status = request.form.get("status")
-        models.update_order_status(oid, status)
-    rows = models.get_orders()
-    body = "<h2 class='text-xl'>Замовлення</h2>"
-    for r in rows:
-        items = models.get_order_items(r[0])
-        items_html = "<ul>"
-        for it in items:
-            items_html += f"<li>{it[2]} — {it[3]} шт × {it[4]} грн</li>"
-        items_html += "</ul>"
-        body += f"<div class='p-3 bg-white rounded shadow mb-3'><b>Замовлення #{r[0]}</b> — {r[3]} грн — статус: {r[2]}{items_html}<form method='post' class='mt-2'><input type='hidden' name='order_id' value='{r[0]}'><select name='status' class='border p-1'><option>pending</option><option>processing</option><option>completed</option><option>cancelled</option></select><button class='ml-2 px-2 py-1 bg-green-600 text-white rounded'>Оновити</button></form></div>"
-    return render_template_string(base_admin, body=body)
 
 # Clients
 @admin_bp.route("/clients", methods=["GET","POST"])
@@ -102,3 +61,44 @@ def clients():
     for r in rows:
         body += f"<div class='p-3 bg-white rounded shadow mb-2'><b>{r[1]}</b> — {r[2]} — {r[3]}</div>"
     return render_template_string(base_admin, body=body)
+
+# Services - HTML admin page
+@admin_bp.route('/services', methods=['GET'])
+def admin_services():
+    services = models.get_services()
+    body = "<h2 class='text-xl'>Послуги</h2>"
+    body += "<form method='post' action='/admin/services/add' class='mt-3 mb-4 bg-white p-4 rounded shadow'><input name='name' placeholder='Назва послуги' class='border p-2 w-full mb-2' required><textarea name='description' placeholder='Опис' class='border p-2 w-full mb-2'></textarea><div class='flex gap-2'><input name='price' placeholder='Ціна' class='border p-2' required></div><button class='mt-2 px-3 py-1 bg-blue-600 text-white rounded'>Додати послугу</button></form>"
+    for s in services:
+        body += f"<div class='p-3 bg-white rounded shadow mb-2'><b>{s[1]}</b> — {s[3]} грн <div class='text-sm text-gray-600'>{s[2]}</div><form method='post' action='/admin/services/delete/{s[0]}' class='mt-2'><button class='px-2 py-1 bg-red-500 text-white rounded'>Видалити</button></form></div>"
+    return render_template_string(base_admin, body=body)
+
+@admin_bp.route('/services/add', methods=['POST'])
+def admin_add_service():
+    name = request.form.get('name')
+    description = request.form.get('description')
+    price = request.form.get('price', 0)
+    try:
+        sid = models.create_service(name, description, float(price))
+        return redirect(url_for('admin.admin_services'))
+    except Exception as e:
+        return render_template_string(base_admin, body=f"<div class='text-red-600'>Помилка: {e}</div>")
+
+@admin_bp.route('/services/delete/<int:service_id>', methods=['POST'])
+def admin_delete_service(service_id):
+    models.delete_service(service_id)
+    return redirect(url_for('admin.admin_services'))
+
+# Service orders - HTML admin page
+@admin_bp.route('/service_orders', methods=['GET'])
+def admin_service_orders():
+    orders = models.get_service_orders()
+    body = "<h2 class='text-xl'>Замовлення послуг</h2>"
+    for o in orders:
+        body += f"<div class='p-3 bg-white rounded shadow mb-3'><b>#{o[0]}</b> — Послуга: {o[2]} — К-сть: {o[3]} — Сума: {o[5]} грн — Статус: {o[8]}<div class='text-sm text-gray-600'>Замовник: {o[6] or '-'} {('('+o[7]+')') if o[7] else ''} — {o[9]}</div><form method='post' action='/admin/service_orders/{o[0]}/status' class='mt-2'><select name='status' class='border p-1'><option>new</option><option>processing</option><option>completed</option><option>cancelled</option></select><button class='ml-2 px-2 py-1 bg-green-600 text-white rounded'>Оновити</button></form></div>"
+    return render_template_string(base_admin, body=body)
+
+@admin_bp.route('/service_orders/<int:order_id>/status', methods=['POST'])
+def admin_update_service_order_status(order_id):
+    status = request.form.get('status', 'processing')
+    models.update_service_order_status(order_id, status)
+    return redirect(url_for('admin.admin_service_orders'))
