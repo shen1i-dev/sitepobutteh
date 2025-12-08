@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Товари - Сайт з Технікою</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .api-info {
+            background: #f0f4ff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .api-info code {
+            background: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #e63946;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-image-placeholder {
+            color: white;
+            font-size: 3em;
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .product-id {
+            color: #999;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .product-name {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .product-price {
+            font-size: 1.8em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .product-price-label {
+            color: #999;
+            font-size: 0.8em;
+            text-transform: uppercase;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: scale(1.02);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .stats {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        footer {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: #666;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛒 Магазин Техніки</h1>
+            <p>REST API для управління товарами</p>
+            <div class="api-info">
+                <strong>API Endpoint:</strong> <code>GET http://127.0.0.1:5000/api/v1/products</code>
+            </div>
+        </header>
+
+        <div class="stats" id="stats">
+            <h2>📊 Статистика</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number" id="total-products">0</div>
+                    <div class="stat-label">Всього Товарів</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="avg-price">₴0</div>
+                    <div class="stat-label">Середня Ціна</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="max-price">₴0</div>
+                    <div class="stat-label">Найдорожчий</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="min-price">₴0</div>
+                    <div class="stat-label">Найдешевший</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="products-container" class="products-grid">
+            <div class="loading">⏳ Завантаження товарів...</div>
+        </div>
+
+        <footer>
+            <p>REST API документація доступна на <a href="http://127.0.0.1:5000/apidocs/" target="_blank">Swagger UI</a></p>
+            <p style="margin-top: 10px; font-size: 0.9em;">© 2025 Магазин Техніки | Лабораторна робота №5</p>
+        </footer>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:5000/api/v1/products';
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    displayProducts(data.data);
+                    updateStats(data.data);
+                } else {
+                    showError('Помилка при завантаженні товарів');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError(`Помилка підключення: ${error.message}`);
+            }
+        }
+
+        function displayProducts(products) {
+            const container = document.getElementById('products-container');
+            
+            if (products.length === 0) {
+                container.innerHTML = '<div class="error">Немає товарів для відображення</div>';
+                return;
+            }
+
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-image">
+                        ${product.image && product.image !== '' && !product.image.includes('placeholder') 
+                            ? `<img src="${product.image}" alt="${product.name}" onerror="this.parentElement.innerHTML = '<div class=\\'product-image-placeholder\\'>📱</div>'">` 
+                            : '<div class="product-image-placeholder">📱</div>'}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-id">ID: ${product.id}</div>
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">
+                            ₴${Number(product.price).toLocaleString('uk-UA', { maximumFractionDigits: 2 })}
+                            <div class="product-price-label">Ціна</div>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary" onclick="addToCart(${product.id}, '${product.name}')">
+                                🛒 Додати
+                            </button>
+                            <button class="btn btn-secondary" onclick="viewDetails(${product.id})">
+                                👁️ Деталі
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats(products) {
+            const totalProducts = products.length;
+            const prices = products.map(p => p.price);
+            const avgPrice = (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2);
+            const maxPrice = Math.max(...prices).toFixed(2);
+            const minPrice = Math.min(...prices).toFixed(2);
+
+            document.getElementById('total-products').textContent = totalProducts;
+            document.getElementById('avg-price').textContent = `₴${Number(avgPrice).toLocaleString('uk-UA')}`;
+            document.getElementById('max-price').textContent = `₴${Number(maxPrice).toLocaleString('uk-UA')}`;
+            document.getElementById('min-price').textContent = `₴${Number(minPrice).toLocaleString('uk-UA')}`;
+        }
+
+        function addToCart(id, name) {
+            alert(`✅ Товар "${name}" додано в кошик!`);
+        }
+
+        function viewDetails(id) {
+            alert(`Деталі товару ID: ${id}`);
+        }
+
+        function showError(message) {
+            const container = document.getElementById('products-container');
+            container.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Завантажити товари при завантаженні сторінки
+        document.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</body>
+</html>

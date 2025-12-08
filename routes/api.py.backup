@@ -1,0 +1,674 @@
+# This file is deprecated. Use routes/api/ directory instead.
+from datetime import datetime
+
+api_bp = Blueprint('api', __name__)
+
+# Products endpoints
+@api_bp.route('/api/products', methods=['GET'])
+def get_all_products():
+    """
+    Отримати всі продукти
+    ---
+    tags:
+      - Products
+    responses:
+      200:
+        description: Список всіх продуктів
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: "Ноутбук"
+              price:
+                type: number
+                format: float
+                example: 25000.50
+              image:
+                type: string
+                example: "laptop.jpg"
+      500:
+        description: Помилка сервера
+    """
+    try:
+        category = request.args.get('category')
+        sort = request.args.get('sort', 'id')
+        page = request.args.get('page', 1, type=int)
+        
+        query = Product.query
+        if category:
+            query = query.filter_by(category=category)
+        
+        products = query.order_by(sort).paginate(page=page, per_page=10)
+        
+        return jsonify({
+            'status': 'success',
+            'data': [p.to_dict() for p in products.items],
+            'total': products.total,
+            'pages': products.pages
+        }), 200
+    except Exception as e:
+        return error_handler(e, 500)
+
+@api_bp.route('/api/products/<int:product_id>', methods=['GET'])
+def get_product(product_id):
+    """
+    Отримати товар за ID
+    ---
+    tags:
+      - Products
+    parameters:
+      - name: product_id
+        in: path
+        type: integer
+        required: true
+        description: ID продукту
+    responses:
+      200:
+        description: Інформація про продукт
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "Ноутбук"
+            price:
+              type: number
+              format: float
+              example: 25000.50
+            image:
+              type: string
+              example: "laptop.jpg"
+      404:
+        description: Продукт не знайдено
+      500:
+        description: Помилка сервера
+    """
+    try:
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'status': 'error', 'message': 'Product not found'}), 404
+        
+        return jsonify({
+            'status': 'success',
+            'data': product.to_dict()
+        }), 200
+    except Exception as e:
+        return error_handler(e, 500)
+
+@api_bp.route('/api/products', methods=['POST'])
+def create_product():
+    """
+    Створити новий товар
+    ---
+    tags:
+      - Products
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - name
+            - price
+          properties:
+            name:
+              type: string
+              example: "Ноутбук"
+            price:
+              type: number
+              format: float
+              example: 25000.50
+            stock:
+              type: integer
+              example: 10
+            category:
+              type: string
+              example: "Електроніка"
+            description:
+              type: string
+              example: "Потужний ноутбук для роботи та навчання"
+    responses:
+      201:
+        description: Товар успішно створено
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Product created successfully"
+      400:
+        description: Відсутні обов'язкові поля
+      500:
+        description: Помилка сервера
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ['name', 'price']):
+            return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
+        
+        product = Product(
+            name=data['name'],
+            price=data['price'],
+            stock=data.get('stock', 0),
+            category=data.get('category'),
+            description=data.get('description')
+        )
+        db.session.add(product)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Product created',
+            'data': product.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return error_handler(e, 500)
+
+@api_bp.route('/api/products/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    """
+    Оновити товар
+    ---
+    tags:
+      - Products
+    parameters:
+      - name: product_id
+        in: path
+        type: integer
+        required: true
+        description: ID продукту
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "Ноутбук Pro"
+            price:
+              type: number
+              format: float
+              example: 30000.00
+            stock:
+              type: integer
+              example: 5
+            category:
+              type: string
+              example: "Електроніка"
+            description:
+              type: string
+              example: "Потужний ноутбук для професіоналів"
+    responses:
+      200:
+        description: Товар успішно оновлено
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Product updated successfully"
+      400:
+        description: Невірні дані
+      404:
+        description: Продукт не знайдено
+      500:
+        description: Помилка сервера
+    """
+    try:
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'status': 'error', 'message': 'Product not found'}), 404
+        
+        data = request.get_json()
+        product.name = data.get('name', product.name)
+        product.price = data.get('price', product.price)
+        product.stock = data.get('stock', product.stock)
+        product.category = data.get('category', product.category)
+        product.description = data.get('description', product.description)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Product updated',
+            'data': product.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return error_handler(e, 500)
+
+@api_bp.route('/api/products/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    """
+    Видалити товар
+    ---
+    tags:
+      - Products
+    parameters:
+      - name: product_id
+        in: path
+        type: integer
+        required: true
+        description: ID продукту для видалення
+    responses:
+      204:
+        description: Товар успішно видалено
+      404:
+        description: Продукт не знайдено
+      500:
+        description: Помилка сервера
+    """
+    try:
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'status': 'error', 'message': 'Product not found'}), 404
+        
+        db.session.delete(product)
+        db.session.commit()
+        
+        return '', 204
+    except Exception as e:
+        db.session.rollback()
+        return error_handler(e, 500)
+
+# Orders endpoints
+@api_bp.route('/api/orders', methods=['GET'])
+def get_all_orders():
+    """
+    Отримати всі замовлення
+    ---
+    tags:
+      - Orders
+    responses:
+      200:
+        description: Список всіх замовлень
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              email:
+                type: string
+                example: "user@example.com"
+              address:
+                type: string
+                example: "вул. Шевченка, 10"
+              total_price:
+                type: number
+                format: float
+                example: 50000.00
+              status:
+                type: string
+                example: "New"
+              date:
+                type: string
+                example: "2024-01-15 14:30:00"
+      500:
+        description: Помилка сервера
+    """
+    try:
+        orders = get_orders()
+        return jsonify([dict(order) for order in orders]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/api/orders/<int:order_id>', methods=['GET'])
+def get_order(order_id):
+    """
+    Отримати деталі замовлення
+    ---
+    tags:
+      - Orders
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: ID замовлення
+    responses:
+      200:
+        description: Деталі замовлення
+        schema:
+          type: object
+          properties:
+            order:
+              type: object
+              properties:
+                id:
+                  type: integer
+                email:
+                  type: string
+                address:
+                  type: string
+                total_price:
+                  type: number
+                status:
+                  type: string
+                date:
+                  type: string
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  quantity:
+                    type: integer
+                  name:
+                    type: string
+                  price:
+                    type: number
+      404:
+        description: Замовлення не знайдено
+      500:
+        description: Помилка сервера
+    """
+    try:
+        order, items = get_order_details(order_id)
+        if not order:
+            return jsonify({'error': 'Order not found'}), 404
+        
+        return jsonify({
+            'order': dict(order),
+            'items': [dict(item) for item in items]
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/api/orders', methods=['POST'])
+def create_order():
+    """
+    Створити нове замовлення
+    ---
+    tags:
+      - Orders
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - email
+            - address
+            - cart
+          properties:
+            email:
+              type: string
+              example: "user@example.com"
+            address:
+              type: string
+              example: "вул. Шевченка, 10"
+            cart:
+              type: object
+              example: {
+                "1": {
+                  "id": 1,
+                  "name": "Ноутбук",
+                  "price": 25000.50,
+                  "quantity": 1
+                }
+              }
+    responses:
+      201:
+        description: Замовлення успішно створено
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Order created successfully"
+      400:
+        description: Відсутні обов'язкові поля
+      500:
+        description: Помилка сервера
+    """
+    try:
+        data = request.get_json()
+        if not data or 'email' not in data or 'address' not in data or 'cart' not in data:
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        add_order(data['email'], data['address'], data['cart'])
+        return jsonify({'message': 'Order created successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/api/orders/<int:order_id>', methods=['PUT'])
+def update_order(order_id):
+    """
+    Оновити статус замовлення
+    ---
+    tags:
+      - Orders
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: ID замовлення
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              example: "Processing"
+              enum: ["New", "Processing", "Shipped", "Delivered", "Cancelled"]
+    responses:
+      200:
+        description: Замовлення успішно оновлено
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Order updated successfully"
+      400:
+        description: Статус не вказано
+      500:
+        description: Помилка сервера
+    """
+    try:
+        data = request.get_json()
+        if not data or 'status' not in data:
+            return jsonify({'error': 'Status is required'}), 400
+        
+        update_order_status(order_id, data['status'])
+        return jsonify({'message': 'Order updated successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/api/orders/<int:order_id>', methods=['DELETE'])
+def remove_order(order_id):
+    """
+    Видалити замовлення
+    ---
+    tags:
+      - Orders
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: ID замовлення для видалення
+    responses:
+      200:
+        description: Замовлення успішно видалено
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Order deleted successfully"
+      500:
+        description: Помилка сервера
+    """
+    try:
+        delete_order(order_id)
+        return jsonify({'message': 'Order deleted successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Feedback endpoints
+@api_bp.route('/api/feedback', methods=['GET'])
+def get_all_feedback():
+    """
+    Отримати всі відгуки
+    ---
+    tags:
+      - Feedback
+    responses:
+      200:
+        description: Список всіх відгуків
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: "Іван Петренко"
+              email:
+                type: string
+                example: "ivan@example.com"
+              message:
+                type: string
+                example: "Дуже задоволений покупкою!"
+      500:
+        description: Помилка сервера
+    """
+    try:
+        conn = get_db_connection()
+        feedback = conn.execute('SELECT * FROM feedback').fetchall()
+        conn.close()
+        return jsonify([dict(f) for f in feedback]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/api/feedback', methods=['POST'])
+def create_feedback():
+    """
+    Створити новий відгук
+    ---
+    tags:
+      - Feedback
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - name
+            - email
+            - message
+          properties:
+            name:
+              type: string
+              example: "Іван Петренко"
+            email:
+              type: string
+              example: "ivan@example.com"
+            message:
+              type: string
+              example: "Дуже задоволений покупкою!"
+    responses:
+      201:
+        description: Відгук успішно створено
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Feedback submitted successfully"
+      400:
+        description: Не всі обов'язкові поля заповнені
+      500:
+        description: Помилка сервера
+    """
+    try:
+        data = request.get_json()
+        if not data or not all(k in data for k in ['name', 'email', 'message']):
+            return jsonify({'error': 'All fields are required'}), 400
+        
+        conn = get_db_connection()
+        conn.execute(
+            'INSERT INTO feedback (name, email, message) VALUES (?, ?, ?)',
+            (data['name'], data['email'], data['message'])
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Feedback submitted successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/api/feedback/<int:feedback_id>', methods=['DELETE'])
+def delete_feedback(feedback_id):
+    """
+    Видалити відгук
+    ---
+    tags:
+      - Feedback
+    parameters:
+      - name: feedback_id
+        in: path
+        type: integer
+        required: true
+        description: ID відгуку для видалення
+    responses:
+      200:
+        description: Відгук успішно видалено
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Feedback deleted successfully"
+            deleted_id:
+              type: integer
+              example: 1
+      404:
+        description: Відгук не знайдено
+      500:
+        description: Помилка сервера
+    """
+    try:
+        conn = get_db_connection()
+        # Перевіряємо чи існує відгук
+        feedback = conn.execute('SELECT * FROM feedback WHERE id = ?', (feedback_id,)).fetchone()
+        
+        if not feedback:
+            return jsonify({'error': 'Feedback not found'}), 404
+            
+        conn.execute('DELETE FROM feedback WHERE id = ?', (feedback_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'message': 'Feedback deleted successfully',
+            'deleted_id': feedback_id
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
