@@ -5,15 +5,26 @@ from routes.admin import admin_bp
 from routes.shop import shop_bp
 from routes.accounts import accounts_bp
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from flasgger import Flasgger
 from datetime import timedelta
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Необхідно для роботи з сесіями
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+
+# Отримуємо змінні середовища
+SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
+DATABASE_PATH = os.environ.get('DATABASE_PATH', 'sqlite:///db.sqlite')
+FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
+
+# Налаштування Flask
+app.secret_key = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DATABASE_PATH}' if DATABASE_PATH.endswith('.db') else DATABASE_PATH
 app.config['JSON_SORT_KEYS'] = False
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Сесія на 30 днів
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+
+# CORS конфігурація для дозволу запитів з браузера
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Ініціалізація бази даних
 init_db()
@@ -49,7 +60,23 @@ def about():
 def api_products():
     return render_template('api_products.html')
 
+# Health check endpoint
+@app.route('/health')
+def health():
+    try:
+        # Перевіряємо доступність застосунку
+        return {'status': 'healthy', 'environment': FLASK_ENV}, 200
+    except Exception as e:
+        return {'status': 'unhealthy', 'error': str(e)}, 500
+
 if __name__ == '__main__':
+    # Створюємо директорію для бази даних, якщо її немає
+    os.makedirs(os.path.dirname(DATABASE_PATH) if DATABASE_PATH != 'sqlite:///db.sqlite' else 'data', exist_ok=True)
+    
+    # Ініціалізуємо базу даних
     with app.app_context():
         db.create_all()
-    app.run(debug=True, port=5000)
+    
+    # Запускаємо сервер на всіх інтерфейсах (необхідно для контейнера)
+    debug_mode = FLASK_ENV == 'development'
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)

@@ -1,0 +1,70 @@
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.so
+.pytest_cache
+.coverage
+htmlcov
+venv
+env
+*.egg-info
+dist
+build
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE та редактори
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Середовище та конфіг
+.env
+.env.example
+.env.local
+.env.production
+
+# Документація та файли
+*.md
+README.md
+LICENSE
+*.log
+*.md5
+
+# Docker та контейнеризація
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+.dockerignore
+.docker
+
+# Дані
+data/database.db
+*.db
+*.sqlite
+*.sqlite3
+backup/
+*.zip
+*.tar.gz
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Інші непотрібні файли
+.editorconfig
+.prettierrc
+.eslintrc
+setup.cfg
+pyproject.toml
+tox.ini
