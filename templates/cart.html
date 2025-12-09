@@ -27,7 +27,14 @@
     <form action="{{ url_for('shop.checkout') }}" method="post">
         <div class="mb-4">
             <label for="email" class="block mb-2">Email:</label>
-            <input type="email" id="email" name="email" required class="w-full p-2 border rounded">
+            <input type="email" id="email" name="email" 
+                   value="{{ session.get('user_email', '') }}" 
+                   required class="w-full p-2 border rounded">
+            {% if session.get('user_email') %}
+                <small class="text-green-600">✓ Залогіновано як {{ session.get('user_email') }}</small>
+            {% else %}
+                <small class="text-gray-500">Введіть ваш email або <a href="{{ url_for('accounts.accounts') }}" class="text-blue-500 hover:underline">створіть аккаунт</a></small>
+            {% endif %}
         </div>
         <div class="mb-4">
             <label for="address" class="block mb-2">Адреса доставки:</label>

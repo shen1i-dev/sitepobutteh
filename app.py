@@ -6,12 +6,14 @@ from routes.shop import shop_bp
 from routes.accounts import accounts_bp
 from flask_sqlalchemy import SQLAlchemy
 from flasgger import Flasgger
+from datetime import timedelta
 import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Необхідно для роботи з сесіями
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 app.config['JSON_SORT_KEYS'] = False
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Сесія на 30 днів
 
 # Ініціалізація бази даних
 init_db()
