@@ -85,6 +85,24 @@ pip install -r requirements.txt
 python app.py
 ```
 
+### Запуск через Docker (Windows helper)
+
+Якщо Docker не встановлено або не запущено, в корені репозиторію є скрипт PowerShell `run-docker.ps1`, який спробує встановити Docker Desktop через `winget` (якщо доступно), запустити Docker Desktop та виконати `docker compose up -d --build`.
+
+Запустіть у PowerShell (можливо з правами адміністратора):
+
+```powershell
+cd "d:\OneDrive\Робочий стіл\site"
+.\run-docker.ps1
+```
+
+Якщо віддаєте перевагу ручній інсталяції — встановіть Docker Desktop з https://www.docker.com/get-started та після запуску виконайте у папці з проєктом:
+
+```powershell
+docker compose up -d --build
+```
+
+
 ### 3. Доступ до додатку
 - **Головна сторінка:** http://127.0.0.1:5000/
 - **API товарів (веб):** http://127.0.0.1:5000/api-products
@@ -586,13 +604,13 @@ curl -X POST http://127.0.0.1:5000/api/v1/users \
 
 ### Тестування:
 ```bash
-# Запуск Flask у debug режимі
+
 python app.py
 
-# Тестування в curl
+
 curl http://127.0.0.1:5000/api/v1/products
 
-# Тестування в Python
+
 import requests
 r = requests.get('http://127.0.0.1:5000/api/v1/products')
 print(r.json())
@@ -619,7 +637,6 @@ print(r.json())
 - Перевірка пароля при логіні
 
 ```python
-# Збереження в сесію
 session['user_email'] = email
 session.permanent = True
 ```
@@ -731,11 +748,11 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 - Виключення непотрібних файлів через .dockerignore
 
 ```dockerfile
-# Етап 1: Встановлення залежностей
+
 FROM python:3.11-slim AS builder
 RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Етап 2: Легкий production образ
+
 FROM python:3.11-alpine
 COPY --from=builder /root/.local /root/.local
 ```
@@ -774,7 +791,7 @@ def health():
 - Розділення development та production конфігурацій
 
 ```bash
-# .env
+
 FLASK_ENV=production
 SECRET_KEY=your-random-secret-key
 DATABASE_PATH=/app/data/database.db
@@ -825,13 +842,10 @@ site/
 
 #### Development режим (з live reload)
 ```bash
-# Встановлення залежностей
 pip install -r requirements.txt
 
-# Запуск контейнерів
 docker-compose up -d
 
-# Переглянути логи
 docker-compose logs -f web
 
 # Зупинка
@@ -840,7 +854,6 @@ docker-compose down
 
 #### Production режим (з Nginx)
 ```bash
-# Запуск з Nginx
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Контейнери будуть запущені:
@@ -850,7 +863,6 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 #### Використання helper скрипту
 ```bash
-# Зробити скрипт виконуваним (Linux/Mac)
 chmod +x docker-helper.sh
 
 # Запуск
@@ -900,10 +912,8 @@ SECRET_KEY=dev-key
 
 Для масштабування додатка можна використовувати:
 ```bash
-# Запуск кількох інстансів
 docker-compose up -d --scale web=3
 
-# З Docker Swarm або Kubernetes
 docker swarm init
 docker stack deploy -c docker-compose.yml mystack
 ```
@@ -925,26 +935,19 @@ docker stack deploy -c docker-compose.yml mystack
 ### 📝 Корисні команди
 
 ```bash
-# Перегляд образів
 docker images
 
-# Перегляд контейнерів
 docker ps -a
 
-# Перегляд volumes
 docker volume ls
 docker volume inspect site_sqlite_data
 
-# Статистика ресурсів
 docker stats
 
-# Очищення ресурсів
 docker system prune -a --volumes
 
-# Вхід в контейнер
 docker-compose exec web sh
 
-# Перевірка файлів в контейнері
 docker-compose exec web ls -la /app/data
 ```
 
