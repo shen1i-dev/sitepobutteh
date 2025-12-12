@@ -1,24 +1,36 @@
-{% extends "base.html" %} {% block title %}Магазин{% endblock %} {% block
-content %}
+{% extends "base.html" %}
+{% block title %}Магазин{% endblock %}
+{% block content %}
 <h1 class="text-3xl font-bold mb-4">Магазин</h1>
-<div
-    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
->
+
+{# Мапа зображень для типових товарів (використовуємо Source Unsplash для відповідних фото) #}
+{% set images = {
+  'Пральна машинка': 'https://source.unsplash.com/400x300/?washing-machine',
+  'Телевізор': 'https://source.unsplash.com/400x300/?television,tv',
+  'Холодильник': 'https://source.unsplash.com/400x300/?refrigerator',
+  'Колонки': 'https://source.unsplash.com/400x300/?speakers',
+  'Мікрохвильова піч': 'https://source.unsplash.com/400x300/?microwave',
+  'Ноутбук': 'https://source.unsplash.com/400x300/?laptop',
+  'Кондиціонер': 'https://source.unsplash.com/400x300/?air-conditioner,ac',
+  'Принтер': 'https://source.unsplash.com/400x300/?printer'
+} %}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
     {% for product in products %}
     <div class="bg-white p-4 shadow-md rounded-lg relative group">
-        <img
-            src="https://picsum.photos/400/300"
-            alt="{{ product.name }}"
-            class="w-full h-48 object-cover mb-2"
-        />
+        {# Вибір зображення: якщо в БД є повна URL (http), використовуємо її, інакше беремо з мапи або стандартний placeholder #}
+        {% if product.image and (product.image[:4] == 'http' or product.image[:5] == 'https') %}
+            {% set img_src = product.image %}
+        {% else %}
+            {% set img_src = images.get(product.name, 'https://via.placeholder.com/400x300?text=' + product.name) %}
+        {% endif %}
+
+        <img src="{{ img_src }}" alt="{{ product.name }}" class="w-full h-48 object-cover mb-2" />
+
         <h2 class="text-xl font-semibold">{{ product.name }}</h2>
         <p class="text-gray-600">{{ product.price }} грн</p>
-        <a
-            href="{{ url_for('shop.add_to_cart', product_id=product.id) }}"
-            class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        >
-            Купити
-        </a>
+
+        <a href="{{ url_for('shop.add_to_cart', product_id=product.id) }}" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">Купити</a>
     </div>
     {% endfor %}
 </div>
