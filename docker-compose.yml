@@ -7,9 +7,7 @@ services:
     volumes:
       - ./:/app:rw
       - ./data:/app/data:rw
-    ports:
-      - "5000:8000" # host:container
-    command: flask run --host=0.0.0.0 --port=8000
+    # Ports and command are defined in docker-compose.override.yml for development
     environment:
       - FLASK_ENV=development
     restart: unless-stopped
