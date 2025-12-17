@@ -13,11 +13,19 @@ import os
 app = Flask(__name__)
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
-DATABASE_PATH = os.environ.get('DATABASE_PATH', 'sqlite:///db.sqlite')
+# Can be a full SQLAlchemy URI (e.g., sqlite:///db.sqlite) or a filesystem path (e.g., /data/db.sqlite)
+DATABASE_PATH = os.environ.get('DATABASE_PATH', 'db.sqlite')
 FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
 
 app.secret_key = SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DATABASE_PATH}' if DATABASE_PATH.endswith('.db') else DATABASE_PATH
+# Normalize DATABASE_PATH into a valid SQLAlchemy URI
+if DATABASE_PATH.startswith('sqlite:'):
+    db_uri = DATABASE_PATH
+else:
+    # Prepend sqlite:/// to relative or absolute filesystem path
+    # For absolute paths, this results in sqlite:////<abs-path>, which SQLAlchemy expects
+    db_uri = f'sqlite:///{DATABASE_PATH}'
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['JSON_SORT_KEYS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
