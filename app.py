@@ -9,6 +9,7 @@ from flask_cors import CORS
 from flasgger import Flasgger
 from datetime import timedelta
 import os
+from seed_data import ensure_seed_products
 
 app = Flask(__name__)
 
@@ -36,6 +37,12 @@ try:
     # Initialize tables if not present
     with app.app_context():
         db.create_all()
+        # Auto-seed demo products if table is empty (idempotent)
+        try:
+            ensure_seed_products()
+        except Exception:
+            # Seeding isn't critical; continue startup
+            pass
 except Exception as e:
     # Avoid import-time crashes in production; table init can also be run later
     pass
@@ -85,6 +92,11 @@ if __name__ == '__main__':
             os.makedirs(db_dir, exist_ok=True)
         with app.app_context():
             db.create_all()
+            # Ensure demo data exists for local dev as well
+            try:
+                ensure_seed_products()
+            except Exception:
+                pass
     except Exception:
         pass
 

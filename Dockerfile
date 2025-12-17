@@ -31,5 +31,5 @@ ENV PORT=5000
 
 EXPOSE 5000
 
-# use gunicorn for production and bind to $PORT; keep workers low by default on small instances
-CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:${PORT} --workers ${WEB_CONCURRENCY:-1}"]
+# run idempotent seeding, then start gunicorn bound to $PORT; keep workers low by default on small instances
+CMD ["sh", "-c", "python -c 'from seed_data import ensure_seed_products; ensure_seed_products()' && gunicorn app:app --bind 0.0.0.0:${PORT} --workers ${WEB_CONCURRENCY:-1}"]
