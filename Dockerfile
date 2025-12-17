@@ -20,13 +20,16 @@ RUN pip install --upgrade pip \
 # copy app
 COPY . /app
 
-# add non-root user
-RUN groupadd -r app && useradd -r -g app app && chown -R app:app /app
+# add non-root user and prepare writable data dir for SQLite
+RUN groupadd -r app && useradd -r -g app app \
+  && mkdir -p /data \
+  && chown -R app:app /app /data
 USER app
 
-ENV PORT=8000
+# Default port (can be overridden by platform)
+ENV PORT=5000
 
-EXPOSE 8000
+EXPOSE 5000
 
-# use gunicorn for production
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "app:app"]
+# use gunicorn for production and bind to $PORT; keep workers low by default on small instances
+CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:${PORT} --workers ${WEB_CONCURRENCY:-1}"]

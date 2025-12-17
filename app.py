@@ -12,20 +12,11 @@ import os
 
 app = Flask(__name__)
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
-# Can be a full SQLAlchemy URI (e.g., sqlite:///db.sqlite) or a filesystem path (e.g., /data/db.sqlite)
-DATABASE_PATH = os.environ.get('DATABASE_PATH', 'db.sqlite')
-FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret')
 
-app.secret_key = SECRET_KEY
-# Normalize DATABASE_PATH into a valid SQLAlchemy URI
-if DATABASE_PATH.startswith('sqlite:'):
-    db_uri = DATABASE_PATH
-else:
-    # Prepend sqlite:/// to relative or absolute filesystem path
-    # For absolute paths, this results in sqlite:////<abs-path>, which SQLAlchemy expects
-    db_uri = f'sqlite:///{DATABASE_PATH}'
-app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+db_path = os.getenv('DATABASE_PATH', os.path.join(os.path.dirname(__file__), 'db.sqlite'))
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_SORT_KEYS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
@@ -79,7 +70,8 @@ def api_products():
 @app.route('/health')
 def health():
     try:
-        return {'status': 'healthy', 'environment': FLASK_ENV}, 200
+        env = os.getenv('FLASK_ENV', 'production')
+        return {'status': 'healthy', 'environment': env}, 200
     except Exception as e:
         return {'status': 'unhealthy', 'error': str(e)}, 500
 
@@ -96,7 +88,7 @@ if __name__ == '__main__':
     except Exception:
         pass
 
-    debug_mode = FLASK_ENV == 'development'
+    debug_mode = os.getenv('FLASK_ENV', 'production') == 'development'
     # Respect PORT env for platforms like Render; default 5000 locally
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
