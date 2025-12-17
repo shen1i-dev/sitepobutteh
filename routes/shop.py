@@ -5,8 +5,9 @@ shop_bp = Blueprint('shop', __name__)
 
 @shop_bp.route('/shop')
 def shop():
-    products = get_products()
-    return render_template('shop.html', products=products)
+    sort = request.args.get('sort')
+    products = get_products(sort=sort)
+    return render_template('shop.html', products=products, current_sort=sort)
 
 @shop_bp.route('/add_to_cart/<int:product_id>')
 def add_to_cart(product_id):
@@ -19,7 +20,9 @@ def add_to_cart(product_id):
         else:
             cart[str(product_id)] = {'id': product_id, 'name': product['name'], 'price': product['price'], 'quantity': 1}
         session['cart'] = cart
-    return redirect(url_for('shop.shop'))
+    # Preserve current sort parameter if present
+    sort = request.args.get('sort')
+    return redirect(url_for('shop.shop', sort=sort) if sort else url_for('shop.shop'))
 
 @shop_bp.route('/cart')
 def cart():

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import get_db_connection
+from models import get_db_connection, get_products
 from .errors import error_handler
 
 products_bp = Blueprint('api_products', __name__)
@@ -9,20 +9,22 @@ def get_all_products():
     """
     Отримати всі товари
     ---
+    parameters:
+      - name: sort
+        in: query
+        type: string
+        enum: [name_asc, name_desc, price_asc, price_desc]
+        required: false
+        description: Порядок сортування товарів
     responses:
       200:
         description: Список всіх товарів
     """
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM products')
-        products = cursor.fetchall()
-        conn.close()
-        
+        sort = request.args.get('sort')
+        products = get_products(sort=sort)
         # Конвертуємо Row об'єкти в список словників
         products_list = [dict(p) for p in products]
-        
         return jsonify({
             'status': 'success',
             'data': products_list,

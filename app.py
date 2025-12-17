@@ -27,6 +27,20 @@ init_db()
 db = SQLAlchemy(app)
 swagger = Flasgger(app)
 
+# Ensure SQLite directory exists even when running under gunicorn (no __main__)
+try:
+    uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if uri.startswith('sqlite:///'):
+        db_file = uri.replace('sqlite:///', '', 1)
+        db_dir = os.path.dirname(db_file) or '.'
+        os.makedirs(db_dir, exist_ok=True)
+    # Initialize tables if not present
+    with app.app_context():
+        db.create_all()
+except Exception as e:
+    # Avoid import-time crashes in production; table init can also be run later
+    pass
+
 app.register_blueprint(feedback_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(shop_bp)
@@ -62,10 +76,19 @@ def health():
         return {'status': 'unhealthy', 'error': str(e)}, 500
 
 if __name__ == '__main__':
-    os.makedirs(os.path.dirname(DATABASE_PATH) if DATABASE_PATH != 'sqlite:///db.sqlite' else 'data', exist_ok=True)
-    
-    with app.app_context():
-        db.create_all()
-    
+    # Ensure local development creates DB directory
+    try:
+        uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        if uri.startswith('sqlite:///'):
+            db_file = uri.replace('sqlite:///', '', 1)
+            db_dir = os.path.dirname(db_file) or '.'
+            os.makedirs(db_dir, exist_ok=True)
+        with app.app_context():
+            db.create_all()
+    except Exception:
+        pass
+
     debug_mode = FLASK_ENV == 'development'
-    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
+    # Respect PORT env for platforms like Render; default 5000 locally
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

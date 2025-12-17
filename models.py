@@ -16,9 +16,29 @@ def init_db():
     conn.commit()
     conn.close()
 
-def get_products():
+def get_products(sort: str | None = None):
+    """
+    Get list of products with optional sorting.
+
+    Supported sort values:
+      - 'name_asc'  : Name A-Z (case-insensitive)
+      - 'name_desc' : Name Z-A (case-insensitive)
+      - 'price_asc' : Price low to high
+      - 'price_desc': Price high to low
+    """
     conn = get_db_connection()
-    products = conn.execute('SELECT * FROM products').fetchall()
+    order_map = {
+        'name_asc': 'name COLLATE NOCASE ASC',
+        'name_desc': 'name COLLATE NOCASE DESC',
+        'price_asc': 'price ASC',
+        'price_desc': 'price DESC',
+    }
+    base_query = 'SELECT * FROM products'
+    if sort in order_map:
+        query = f"{base_query} ORDER BY {order_map[sort]}"
+    else:
+        query = base_query
+    products = conn.execute(query).fetchall()
     conn.close()
     return products
 

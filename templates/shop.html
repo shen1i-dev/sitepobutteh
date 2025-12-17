@@ -15,6 +15,17 @@
   'Принтер': 'https://source.unsplash.com/400x300/?printer'
 } %}
 
+<form method="get" action="{{ url_for('shop.shop') }}" class="mb-4 flex items-center gap-2">
+    <label for="sort" class="text-sm text-gray-700">Сортувати:</label>
+    <select id="sort" name="sort" class="border rounded px-2 py-1" onchange="this.form.submit()">
+        <option value="" {{ '' == (current_sort or '') and 'selected' or '' }}>За замовчуванням</option>
+        <option value="name_asc" {{ (current_sort == 'name_asc') and 'selected' or '' }}>Назва A → Z</option>
+        <option value="name_desc" {{ (current_sort == 'name_desc') and 'selected' or '' }}>Назва Z → A</option>
+        <option value="price_asc" {{ (current_sort == 'price_asc') and 'selected' or '' }}>Ціна: від дешевих</option>
+        <option value="price_desc" {{ (current_sort == 'price_desc') and 'selected' or '' }}>Ціна: від дорогих</option>
+    </select>
+</form>
+
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
     {% for product in products %}
     <div class="bg-white p-4 shadow-md rounded-lg relative group">
@@ -30,7 +41,7 @@
         <h2 class="text-xl font-semibold">{{ product.name }}</h2>
         <p class="text-gray-600">{{ product.price }} грн</p>
 
-        <a href="{{ url_for('shop.add_to_cart', product_id=product.id) }}" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">Купити</a>
+        <a href="{{ url_for('shop.add_to_cart', product_id=product.id, sort=current_sort) }}" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">Купити</a>
     </div>
     {% endfor %}
 </div>
