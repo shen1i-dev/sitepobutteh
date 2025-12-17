@@ -1,7 +1,7 @@
 from models import get_db_connection, init_db
 
 def seed_products():
-    init_db()  # Спочатку ініціалізуємо базу даних
+    init_db()  
     conn = get_db_connection()
     products = [
         ('Пральна машинка', 6999.99, 'https://cdn.27.ua/original/35/73/6632819_1.jpeg'),

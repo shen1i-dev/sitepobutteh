@@ -3,15 +3,13 @@ __pycache__
 *.pyc
 *.pyo
 *.pyd
-*.so
-.pytest_cache
-.coverage
-htmlcov
-venv
+.Python
 env
-*.egg-info
-dist
-build
+venv
+.env
+data/*.sqlite
+*.sqlite
+*.db
 
 # Git
 .git

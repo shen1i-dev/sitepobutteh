@@ -1,33 +1,15 @@
 version: '3.8'
-
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: flask_app
-    ports:
-      - "5000:5000"
-    environment:
-      - FLASK_APP=app.py
-      - FLASK_ENV=production
-      - DATABASE_PATH=/app/data/database.db
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this}
+    build: .
+    env_file:
+      - .env
     volumes:
-      - sqlite_data:/app/data
+      - ./:/app:rw
+      - ./data:/app/data:rw
+    ports:
+      - "5000:8000" # host:container
+    command: flask run --host=0.0.0.0 --port=8000
+    environment:
+      - FLASK_ENV=development
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-volumes:
-  sqlite_data:
-    driver: local

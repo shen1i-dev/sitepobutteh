@@ -1,0 +1,16 @@
+# existing entries...
+.env
+# sensible defaults to ignore runtime / build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.env.local
+data/*.sqlite
+*.sqlite
+*.db
+node_modules/
+dist/
+*.log

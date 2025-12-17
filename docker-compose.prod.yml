@@ -1,15 +1,19 @@
-# Production конфігурація з Nginx reverse proxy
-# Використовуйте: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
 version: '3.8'
 
 services:
   web:
-    # Залишаємо стандартну конфігурацію з docker-compose.yml
-    expose:
-      - "5000"
-    # Приховуємо порт 5000 з публічного доступу
-    ports: []
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-8000}:8000"
+    restart: always
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
     image: nginx:alpine

@@ -1,13 +1,8 @@
-#!/bin/bash
-# Допоміжні скрипти для роботи з Docker контейнерами
-
-# Кольори для виводу
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Функція для виводу повідомлень
 print_msg() {
     echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
 }
@@ -20,7 +15,6 @@ print_warning() {
     echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARNING:${NC} $1"
 }
 
-# Функція для запуску контейнерів
 start() {
     print_msg "Запуск контейнерів..."
     docker-compose up -d
@@ -28,26 +22,22 @@ start() {
     docker-compose ps
 }
 
-# Функція для зупинки контейнерів
 stop() {
     print_msg "Зупинка контейнерів..."
     docker-compose down
     print_msg "Контейнери зупинені!"
 }
 
-# Функція для перезапуску контейнерів
 restart() {
     print_msg "Перезапуск контейнерів..."
     docker-compose restart
     print_msg "Контейнери перезапущені!"
 }
 
-# Функція для перегляду логів
 logs() {
     docker-compose logs -f web
 }
 
-# Функція для створення backup бази даних
 backup() {
     BACKUP_DIR="./backups"
     mkdir -p $BACKUP_DIR
@@ -68,7 +58,6 @@ backup() {
     fi
 }
 
-# Функція для відновлення з backup
 restore() {
     if [ -z "$1" ]; then
         print_error "Необхідно вказати шлях до файлу backup!"
@@ -99,14 +88,12 @@ restore() {
     fi
 }
 
-# Функція для очищення невикористовуваних ресурсів
 clean() {
     print_msg "Очищення невикористовуваних Docker ресурсів..."
     docker system prune -f
     print_msg "Очищення завершено!"
 }
 
-# Функція для перегляду статусу health check
 health() {
     print_msg "Статус контейнера:"
     docker ps --filter "name=flask_app" --format "table {{.Names}}\t{{.Status}}"
@@ -115,7 +102,6 @@ health() {
     docker inspect flask_app | grep -A 10 "\"Health\""
 }
 
-# Функція для виконання команди в контейнері
 exec_cmd() {
     if [ -z "$1" ]; then
         print_error "Необхідно вказати команду!"
@@ -126,13 +112,11 @@ exec_cmd() {
     docker-compose exec web sh -c "$1"
 }
 
-# Функція для перегляду статистики використання ресурсів
 stats() {
     print_msg "Статистика використання ресурсів контейнерів:"
     docker stats flask_app
 }
 
-# Функція для допомоги
 help() {
     echo "Docker Helper скрипт для управління контейнерами"
     echo ""
@@ -153,7 +137,6 @@ help() {
     echo ""
 }
 
-# Основна логіка
 case "$1" in
     start)
         start
