@@ -9,7 +9,31 @@
         .bar {
             transition: all 0.3s ease-in-out;
         }
+        /* плавний перехід кольорів при перемиканні теми */
+        .theme-transition * {
+            transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+        }
     </style>
+
+    <!-- швидка перевірка теми перед завантаженням стилів (щоб уникнути миготіння) -->
+    <script>
+    (function(){
+        try {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        } catch(e) {}
+    })();
+    </script>
+
+    <!-- основні стилі (існуючі) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <!-- стилі для темної теми (переоприділяють кольори через .dark) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark.css') }}">
 </head>
 <body class="flex flex-col min-h-screen bg-gray-100 font-sans leading-normal tracking-normal">
     <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
@@ -25,7 +49,7 @@
                     </div>
                 </button>
                 
-                <ul id="menu" class="hidden w-full lg:flex lg:w-auto lg:space-x-6 flex-col lg:flex-row mt-4 lg:mt-0">
+                <ul id="menu" class="hidden w-full lg:flex lg:w-auto lg:space-x-6 flex-col lg:flex-row mt-4 lg:mt-0 items-center">
                     <li><a href="{{ url_for('home') }}" class="block py-2 lg:py-0 hover:text-yellow-200 transition duration-300">Головна</a></li>
                     <li><a href="{{ url_for('shop.shop') }}" class="block py-2 lg:py-0 hover:text-blue-300 transition duration-300">Магазин</a></li>
                     <li><a href="{{ url_for('api_products') }}" class="block py-2 lg:py-0 hover:text-green-300 transition duration-300">🔍 API Товари</a></li>
@@ -33,6 +57,11 @@
                     <li><a href="{{ url_for('about') }}" class="block py-2 lg:py-0 hover:text-blue-300 transition duration-300">Про нас</a></li>
                     <li><a href="{{ url_for('feedback.feedback') }}" class="block py-2 lg:py-0 hover:text-blue-300 transition duration-300">Зворотній зв'язок</a></li>
                     <li><a href="{{ url_for('accounts.accounts') }}" class="block py-2 lg:py-0 hover:text-blue-300 transition duration-300">Аккаунт</a></li>
+
+                    <!-- Кнопка перемикання теми в шапці -->
+                    <li class="ml-2">
+                        <button id="theme-toggle" class="px-3 py-1 rounded focus:outline-none bg-white bg-opacity-10 hover:bg-opacity-20" aria-pressed="false" aria-label="Перемкнути тему">🌓</button>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -105,5 +134,8 @@
             checkWindowSize(); // Викликаємо функцію при завантаженні сторінки
         });
     </script>
+
+    <!-- підключення скрипта перемикання теми -->
+    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
 </body>
 </html>

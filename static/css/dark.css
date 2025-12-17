@@ -1,0 +1,63 @@
+/* Чітка та проста палітра для темної теми, застосовується коли html має клас .dark */
+
+/* темні змінні для використання в кастомних стилях */
+:root {
+  --bg-default: #ffffff;
+  --surface: #f8fafc;
+  --text-default: #0f172a;
+  --muted: #64748b;
+  --link: #1d4ed8;
+}
+
+.dark {
+  --bg-default: #0b1220;
+  --surface: #0f1724;
+  --text-default: #e6eef8;
+  --muted: #94a3b8;
+  --link: #7cc4ff;
+}
+
+/* базові перекриття — використовуються при відображенні сторінки */
+html.dark, html.dark body {
+  background-color: var(--bg-default) !important;
+  color: var(--text-default) !important;
+}
+
+/* картки, панелі, контейнер */
+html.dark .bg-white {
+  background-color: var(--surface) !important;
+  color: var(--text-default) !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-gray-800 {
+  color: var(--text-default) !important;
+}
+
+html.dark a {
+  color: var(--link) !important;
+}
+
+/* форми */
+html.dark input, html.dark textarea, html.dark select {
+  background-color: rgba(255,255,255,0.03) !important;
+  color: var(--text-default) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* navbar overrides */
+html.dark header {
+  background: linear-gradient(90deg, rgba(10,15,25,0.9), rgba(20,25,40,0.9)) !important;
+}
+
+/* кнопка теми — контрастна */
+#theme-toggle {
+  backdrop-filter: blur(6px);
+}
+
+/* дрібні підлаштування для контрастності та доступності */
+html.dark .muted, html.dark .text-muted {
+  color: var(--muted) !important;
+}
+
+/* кінцева підказка: додайте специфічні класи проекту за потреби */

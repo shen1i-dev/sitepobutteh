@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "D:\OneDrive\Робочий стіл\site\app.py", line 13, in <module>
+    app = Flask(__name__)
+  File "D:\OneDrive\Робочий стіл\site\.venv\Lib\site-packages\flask\app.py", line 376, in __init__
+    instance_path = self.auto_find_instance_path()
+  File "D:\OneDrive\Робочий стіл\site\.venv\Lib\site-packages\flask\app.py", line 630, in auto_find_instance_path
+    prefix, package_path = find_package(self.import_name)
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\OneDrive\Робочий стіл\site\.venv\Lib\site-packages\flask\scaffold.py", line 898, in find_package
+    package_path = _find_package_path(import_name)
+  File "D:\OneDrive\Робочий стіл\site\.venv\Lib\site-packages\flask\scaffold.py", line 859, in _find_package_path
+    loader = pkgutil.get_loader(root_mod_name)
+             ^^^^^^^^^^^^^^^^^^
+AttributeError: module 'pkgutil' has no attribute 'get_loader'
