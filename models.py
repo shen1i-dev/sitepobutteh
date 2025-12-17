@@ -1,8 +1,24 @@
 import sqlite3
+import os
 from datetime import datetime
 
+def _resolve_sqlite_file_path():
+    """Resolve sqlite file path from env DATABASE_PATH which may be a raw path or a SQLAlchemy-style URI."""
+    db_path = os.environ.get('DATABASE_PATH', 'db.sqlite')
+    if db_path.startswith('sqlite:'):
+        # Strip leading sqlite:/// to get filesystem path (works for both relative and absolute)
+        db_path = db_path.replace('sqlite:///', '', 1)
+    # Ensure directory exists
+    db_dir = os.path.dirname(db_path) or '.'
+    try:
+        os.makedirs(db_dir, exist_ok=True)
+    except Exception:
+        # In readonly environments this may fail; ignore and let connect error surface if needed
+        pass
+    return db_path
+
 def get_db_connection():
-    conn = sqlite3.connect('db.sqlite')
+    conn = sqlite3.connect(_resolve_sqlite_file_path())
     conn.row_factory = sqlite3.Row
     return conn
 
